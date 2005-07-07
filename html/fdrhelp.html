@@ -1,0 +1,107 @@
+<html><head><title>R: fdr.ma</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" type="text/css" href="../../R.css">
+</head><body>
+
+<table width="100%" summary="page for fdr.ma {unknown}"><tr><td>fdr.ma {unknown}</td><td align="right">R Documentation</td></tr></table>
+<h2>fdr.ma</h2>
+
+
+<h3>Description</h3>
+
+<p>
+This function takes normalized expression data array, experimental design and 
+computes adjusted p-values
+It returns the fdr adjusted p-values and plots, according to the methods
+described in (Reiner, Yekutieli and Benjamini 2002)
+<code>save</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>fdr.ma(exp.arr,design,p.method="resampling",fdr.adj="BH-LSU",out="adj",plot="t",perms.num=100)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>exp.arr</code></td>
+<td>
+A data frame or matrix, with m rows corresponding to the gene expression level of an observation and n columns to the observations. In the case of gene expression data, rows correspond to genes and columns to mRNA samples. The data can be read using 'read.table'. The matrix is as the X matrix in multtest package.</td></tr>
+<tr valign="top"><td><code>design</code></td>
+<td>
+A vector of charachters corresponding to observation (column) class labels. For k classes, the labels must be k different charachters. The vector is similar to classlabel vector in multtest package.</td></tr>
+<tr valign="top"><td><code>p.method</code></td>
+<td>
+A character string specifying whether resampling mehtod may be used. If 'p.method="resampling"', resampling method is used. If 'p.method="t.test"', t.test is computed without resampling.</td></tr>
+<tr valign="top"><td><code>fdr.adj</code></td>
+<td>
+A character string specifying which type of p-value adjustment method may be used. If 'fdr.adj="BH-LSU"', Benjamini-Hochberg Linear Step Up porcedure is used. If 'fdr.adj="point.est"', point estimation procedure is used.(p.method value must be "resampling") If 'fdr.adj="upper.est"', upper estimation procedure is used.(p.method value must be "resampling") If 'fdr.adj="adaptive"', two-stage adaptive procedure is used.</td></tr>
+<tr valign="top"><td><code>out</code></td>
+<td>
+A character string specifying what value may be shown on the Y axis of the plot. If 'out="adj"', the y axis values are the adjusted p-values. If 'out="pvalue"', the y axis values are the original p-values. If 'out="both"', both the original and adjusted p-values are drawn in two figures.</td></tr>
+<tr valign="top"><td><code>plot</code></td>
+<td>
+A character string specifying what value may be shown on the x axis of the plot. If 'plot="TRUE"', the x axis values are the t-test values. If 'plot="diag"', the x axis values are the rank of the original p-value of the hypothesis.</td></tr>
+<tr valign="top"><td><code>perms.num</code></td>
+<td>
+An integer specifying the number of permutations that would be used.</td></tr>
+</table>
+
+<h3>Value</h3>
+
+<p>
+A data frame with components
+</p>
+<table summary="R argblock">
+<tr valign="top"><td><code>adj</code></td>
+<td>
+adjusted p-values.</td></tr>
+<tr valign="top"><td><code>dif</code></td>
+<td>
+the differences between the means of the two groups.</td></tr>
+<tr valign="top"><td><code>res.pvalues</code></td>
+<td>
+resampling p-values. (in case resampling was requested)</td></tr>
+</table>
+
+<h3>Author(s)</h3>
+
+<p>
+Anat Reiner
+Daniel Yekutieli
+Yoav Benjamini
+Effi Kenigsberg
+</p>
+
+
+<h3>References</h3>
+
+<p>
+Reiner A, Yekutieli D, Benjamini Y: Identifying differentially expressed genes using false discovery rate controlling procedures. Bioinformatics 19:368-375, 2003
+Benjamini, Y., Krieger, A.M.,Yekutieli, D. (2001) “Two Staged Linear Step Up FDR Controlling Procedure”, Technical Report Department of Statistics and O.R., Tel Aviv University.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>
+<code><a href="../../../doc/html/search/SearchObject.html?fdr.gui">fdr.gui</a></code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+exp.arr&lt;&lt;-as.matrix(read.table("exp.arr"))
+design&lt;-c(0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1)
+output&lt;-fdr.ma(exp.arr,design,p.method="t.test",fdr.adj="BH-LSU",out="adj",plot="TRUE")
+</pre>
+
+
+
+<hr><div align="center">[Package <a href="00Index.html">Index]</a></div>
+
+</body></html>
