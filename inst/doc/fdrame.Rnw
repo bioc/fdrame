@@ -9,7 +9,7 @@
 \begin{document}
 
 \title{FDR adjustments of Microarray Experiments (FDR-AME)}
-\author{Yoav Benjamini, Ephraim Kenigsberg, Anat Reiner, Daniel Yekutieli }
+\author{Yoav Benjamini, Effi Kenigsberg, Anat Reiner, Daniel Yekutieli }
 \maketitle
 
 \begin{center}
