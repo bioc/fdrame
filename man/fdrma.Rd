@@ -10,7 +10,7 @@ described in (Reiner, Yekutieli and Benjamini 2002)
 \arguments{
 \item{exp.arr}{A data frame or matrix, with m rows corresponding to the gene expression level of an observation and n columns to the observations. In the case of gene expression data, rows correspond to genes and columns to mRNA samples. The data can be read using 'read.table'. The matrix is as the X matrix in multtest package.}
 \item{design}{A vector of charachters corresponding to observation (column) class labels. For k classes, the labels must be k different charachters. The vector is similar to classlabel vector in multtest package.}
-\item{p.method}{A character string specifying whether resampling mehtod may be used. If 'p.method="resampling"', resampling method is used. If 'p.method="t.test"', t.test is computed without resampling.}
+\item{p.method}{A character string specifying whether resampling mehtod may be used. If 'p.method="resampling"', resampling method is used. If 'p.method="theoretic"', statistic is computed without resampling.}
 \item{fdr.adj}{A character string specifying which type of p-value adjustment method may be used. If 'fdr.adj="BH-LSU"', Benjamini-Hochberg Linear Step Up porcedure is used. If 'fdr.adj="point.est"', point estimation procedure is used.(p.method value must be "resampling") If 'fdr.adj="upper.est"', upper estimation procedure is used.(p.method value must be "resampling") If 'fdr.adj="adaptive"', two-stage adaptive procedure is used.}
 \item{plot}{A vector of character strings specifying the plots that may be drawn. 
 If the vector contains "pvlVSrank", a plot of p-values vs rank is drawn. 
