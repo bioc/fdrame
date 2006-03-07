@@ -336,7 +336,9 @@ compute.t.statistic<-function(exp.arr,design)
 #	mean.a<-apply(exp.arr[,(columns.a)],1,mean)
 #	var.b<-apply(exp.arr[,(columns.b)],1,var)
 #	var.a<-apply(exp.arr[,(columns.a)],1,var)
-	statistic.vector<-as.vector(mean.b-mean.a)/sqrt((var.b/n.b)+(var.a/n.a))
+	s.pooled<-(var.a*(n.a-1)+var.b*(n.b-1))/(n.a+n.b-2)
+	statistic.vector<-as.vector(mean.b-mean.a)/sqrt(s.pooled*((1/n.b)+(1/n.a)))
+	#statistic.vector<-as.vector(mean.b-mean.a)/sqrt((var.b/n.b)+(var.a/n.a))
 	exp.nas.rows.nums<-(1:dim(exp.arr)[1])[is.na(statistic.vector)]
 	if (length(exp.nas.rows.nums)>0)
 	{
