@@ -4,7 +4,7 @@
 void compute_t_statistic(double *m_array, int *columns_a,int *columns_b,int *n_a,int *n_b,int *n_total,int *genes_num,double *t)
 {
 	int i,j=0;
-	double sum_a,sum_b,mean_a,mean_b,var_a,var_b;
+	double sum_a,sum_b,mean_a,mean_b,var_a,var_b,s_pooled;
 	
 	for (j=0;j<*genes_num;j++)
 	{
@@ -27,8 +27,8 @@ void compute_t_statistic(double *m_array, int *columns_a,int *columns_b,int *n_a
 		
 		for (i=0;i<*n_b;i++)
 			var_b+= (m_array[j+columns_b[i]*(*genes_num)]-mean_b)*(m_array[j+columns_b[i]*(*genes_num)]-mean_b)/(*n_b-1);
-		s_pooled=(var_a*(n_a-1)+var_b*(n_b-1))/(n_a+n_b-2)
-		t[j]=(mean_a-mean_b)/sqrt( s_pooled*((1/(*n_a))+(1/(*n_b))));
+		s_pooled=(var_a*(n_a-1)+var_b*(n_b-1))/(n_a+n_b-2);
+		t[j]=(mean_a-mean_b)/sqrt(s_pooled*((1/(*n_a))+(1/(*n_b))));
 	}
 
 }
