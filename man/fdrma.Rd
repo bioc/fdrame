@@ -6,12 +6,13 @@ This function takes normalized expression data array, experimental design and
 computes adjusted p-values. It returns the fdr adjusted p-values and plots, according to the methods
 described in (Reiner, Yekutieli and Benjamini 2002)
 }
-\usage{fdr.ma(exp.arr,design,p.method="resampling",fdr.adj="BH-LSU",plot=c("pvlVSrank","adjVSstat"),perms.num=100)}
+\usage{fdr.ma(exp.arr,design,p.method="resampling",fdr.adj="BH-LSU",equal.var=TRUE,plot=c("pvlVSrank","adjVSstat"),perms.num=100)}
 \arguments{
 \item{exp.arr}{A data frame or matrix, with m rows corresponding to the gene expression level of an observation and n columns to the observations. In the case of gene expression data, rows correspond to genes and columns to mRNA samples. The data can be read using 'read.table'. The matrix is as the X matrix in multtest package.}
 \item{design}{A vector of charachters corresponding to observation (column) class labels. For k classes, the labels must be k different charachters. The vector is similar to classlabel vector in multtest package.}
 \item{p.method}{A character string specifying whether resampling mehtod may be used. If 'p.method="resampling"', resampling method is used. If 'p.method="theoretic"', statistic is computed without resampling.}
 \item{fdr.adj}{A character string specifying which type of p-value adjustment method may be used. If 'fdr.adj="BH-LSU"', Benjamini-Hochberg Linear Step Up porcedure is used. If 'fdr.adj="point.est"', point estimation procedure is used.(p.method value must be "resampling") If 'fdr.adj="upper.est"', upper estimation procedure is used.(p.method value must be "resampling") If 'fdr.adj="adaptive"', two-stage adaptive procedure is used.}
+item{equal.var}{A boolean variable specifying whether equal variance assumption may be taken. If TRUE, an equal group variances is assumed. If FALSE, welch approximation is used, for the unequal group variances}
 \item{plot}{A vector of character strings specifying the plots that may be drawn. 
 If the vector contains "pvlVSrank", a plot of p-values vs rank is drawn. 
 If the vector contains "adjVSrank", a plot of adjusted p-values vs rank is drawn.
@@ -29,6 +30,6 @@ Benjamini, Y., Krieger, A.M.,Yekutieli, D. (2001) "Two Staged Linear Step Up FDR
 \author{Yoav Benjamini, Effi Kenigsberg, Anat Reiner, Daniel Yekutieli}
 \examples{
 data(exp.arr,design)
-output<-fdr.ma(exp.arr,design,p.method="theoretic",fdr.adj="BH-LSU",plot=c("pvlVSrank","adjVSrank","adjVSstat"))
+output<-fdr.ma(exp.arr,design,p.method="theoretic",fdr.adj="BH-LSU",equal.var=TRUE,plot=c("pvlVSrank","adjVSrank","adjVSstat"))
 }
 \keyword{htest}
