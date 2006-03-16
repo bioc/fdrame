@@ -4,13 +4,19 @@
 #											      #
 ###############################################################################################
 
-fdr.ma<- function(exp.arr=NA,design=NA,p.method="resampling",fdr.adj="BH-LSU",plot=c("pvlVSrank","adjVSstat"),perms.num=100)
+fdr.ma<- function(exp.arr=NA,design=NA,p.method="resampling",fdr.adj="BH-LSU",equal.var=TRUE,plot=c("pvlVSrank","adjVSstat"),perms.num=100)
 {
 	if (is.na(exp.arr[1])) stop("It's impossible to work without data. You must specify a valid \"exp.arr\" .")
 	if (is.na(design[1])) stop("You must specify a valid \"design\" vector.")
 
 	if (length(unique(design))==2)				# Decides whether to run f test or t test according to the number of groups in the design
-		test<-"t"					
+	{
+		if ((equal.var==FALSE)&&(p.method=="theoretic"))
+			test<-"t.welch"
+		else if ((equal.var==FALSE)&&(p.method=="resampling"))
+			stop("Resampling p.method may be use only under equal variance assumption")
+		else test<-"t.equal.var"		
+	}
 	else if (length(unique(design))>2)			
 		test<-"f"
 	else	
@@ -54,7 +60,7 @@ fdr.ma<- function(exp.arr=NA,design=NA,p.method="resampling",fdr.adj="BH-LSU",pl
 #											      #
 ###############################################################################################
 
-fdr.basic.comp<- function(exp.arr,design,test="t",ref.vector="NULL",jpoint=2.5,perms.num=1) # Inits and builds rejections vector
+fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint=2.5,perms.num=1) # Inits and builds rejections vector
 {
 	#Each one of the core functions call this function. Here the statistic is computed, refference vector is created, pvalues and resampled pvalues are computed.
 
@@ -67,7 +73,7 @@ fdr.basic.comp<- function(exp.arr,design,test="t",ref.vector="NULL",jpoint=2.5,p
 	cs<-compute.statistic(exp.arr,design,test)
 	statistic.vector<-cs$statistic.vector	#compute stat each gene (No Resampling)
 	
-	if (test=="t") 	jpoint<-2
+	if ((test=="t.welch")||(test=="t.equal.var"))	jpoint<-2
 	else if (test=="f") jpoint<- qf(0.95,n.groups-1,dim(exp.arr)[2]-n.groups)
 
 	if (ref.vector[1]=="NULL")		 				#checks whether it has ref.vector
@@ -97,8 +103,11 @@ fdr.basic.comp<- function(exp.arr,design,test="t",ref.vector="NULL",jpoint=2.5,p
 	{
 		r.vector[i]<-sum(abs(statistic.vector)>ref.vector[i],na.rm=TRUE)	#r.vector[m] counts the number rejected values (bigger than ref.vector[m])
 	}
-	if (test=="t")
-		pvalues<-2*(1-pt(as.numeric(ref.vector),(n.total-2)))	#compute pvalues from t-statistic
+	if ((test=="t.welch")||(test=="t.equal.var"))
+		pvalues<-2*(1-pt(as.numeric(ref.vector),cs$df))	#compute pvalues from t-statistic
+	#	
+	#	pvalues<-2*(1-pt(as.numeric(ref.vector),(n.total-2)))	#compute pvalues from t-statistic
+	
 	else if (test=="f")
 		pvalues<-(1-pf(as.numeric((ref.vector)),n.groups-1,(n.total-n.groups)))	#compute pvalues from f-statistic
 	ud<-unique(design)
@@ -315,7 +324,7 @@ gene.expression.normalization <- function(genes,genes.num,n.total)	#	Normalizati
 #	ComputeS t-statistic
 #	(in this case, t for comparing two independent samples)
 
-compute.t.statistic<-function(exp.arr,design)
+compute.t.statistic<-function(exp.arr,design,equal.var=TRUE)
 {
 	columns.b<-(1:length(design))[unique(design)[1]==design]
 	columns.a<-(1:length(design))[unique(design)[2]==design]
@@ -336,9 +345,15 @@ compute.t.statistic<-function(exp.arr,design)
 #	mean.a<-apply(exp.arr[,(columns.a)],1,mean)
 #	var.b<-apply(exp.arr[,(columns.b)],1,var)
 #	var.a<-apply(exp.arr[,(columns.a)],1,var)
-	s.pooled<-(var.a*(n.a-1)+var.b*(n.b-1))/(n.a+n.b-2)
-	statistic.vector<-as.vector(mean.b-mean.a)/sqrt(s.pooled*((1/n.b)+(1/n.a)))
-	#statistic.vector<-as.vector(mean.b-mean.a)/sqrt((var.b/n.b)+(var.a/n.a))
+
+	if (equal.var)
+	{
+		s.pooled<-(var.a*(n.a-1)+var.b*(n.b-1))/(n.a+n.b-2)
+		statistic.vector<-as.vector(mean.b-mean.a)/sqrt(s.pooled*((1/n.b)+(1/n.a)))
+	}
+	else
+		statistic.vector<-as.vector(mean.b-mean.a)/sqrt((var.b/n.b)+(var.a/n.a))
+
 	exp.nas.rows.nums<-(1:dim(exp.arr)[1])[is.na(statistic.vector)]
 	if (length(exp.nas.rows.nums)>0)
 	{
@@ -358,10 +373,33 @@ compute.t.statistic<-function(exp.arr,design)
 				((exp.nas[i,columns.b]%*%rep.one.n.b)/n.b))^2)/(n.b-1))%*%rep.one.n.b)) 
 			var.a<-(((((exp.nas[i,columns.a]-
 				((exp.nas[i,columns.a]%*%rep.one.n.a)/n.a))^2)/(n.a-1))%*%rep.one.n.a))
-			statistic.vector[exp.nas.rows.nums[i]]<-(mean.b-mean.a)/sqrt((var.b/n.b)+(var.a/n.a))
+			if (equal.var)
+			{
+				s.pooled<-(var.a*(n.a-1)+var.b*(n.b-1))/(n.a+n.b-2)
+				statistic.vector[exp.nas.rows.nums[i]]<-(mean.b-mean.a)/sqrt(s.pooled*((1/n.b)+(1/n.a)))
+			}
+			else
+				statistic.vector[exp.nas.rows.nums[i]]<-(mean.b-mean.a)/sqrt((var.b/n.b)+(var.a/n.a))
+
+			
 		}
 	}
-	return(list(statistic.vector=statistic.vector,dif=as.vector(mean.b-mean.a)))
+	
+	if (!equal.var)
+	{
+		print(var.b)
+		print(var.a)
+		#print(n.a)
+		c<-(var.a/n.a)/(var.a/n.a+var.b/n.b)
+		
+		df<-1/(c^2/(n.a-1)+(1-c)^2/(n.b-1))
+		print(c)
+		#print((1-c^2)/(n.b-1))
+		
+	}
+	else 
+		df<-n.a+n.b-2
+	return(list(statistic.vector=statistic.vector,dif=as.vector(mean.b-mean.a),df=df))
 }
 
 
@@ -386,7 +424,10 @@ compute.f.statistic<-function(exp.arr,design)
 
 compute.statistic<-function(exp.arr,design,test)
 {
-	if (test=="t")	return(compute.t.statistic(exp.arr,design))
+	if (test=="t.welch") 
+		return(compute.t.statistic(exp.arr,design,equal.var=FALSE))
+	if (test=="t.equal.var")
+		return(compute.t.statistic(exp.arr,design,equal.var=TRUE))
 	else if (test=="f") return(compute.f.statistic(exp.arr,design))
 	else 
 	{
@@ -400,7 +441,7 @@ get.resampling.statistic.array<-function(exp.arr,design,perms.num,groups.sizes,t
 {
 	row.doesnt.contain.na<-apply(is.na(exp.arr),1,sum)==0
 	genes.num<-sum(row.doesnt.contain.na)
-	if (test=="t")
+	if (test=="t.equal.var")
 	{
 		statistic.array<-vector("numeric",genes.num*perms.num)
 		statistic.array<-.C("compute_resampling_t_stat",as.double(as.vector(exp.arr[row.doesnt.contain.na])),as.integer(groups.sizes[1]),as.integer(groups.sizes[2]),as.integer(genes.num), as.integer(perms.num),as.double(statistic.array),PACKAGE="fdrame")[[6]]	
@@ -414,7 +455,7 @@ get.resampling.statistic.array<-function(exp.arr,design,perms.num,groups.sizes,t
 	return(statistic.matrix)
 }
 
-compute.resampling.stat<- function(exp.arr,design,genes.num,perms.num,test="t")
+compute.resampling.stat<- function(exp.arr,design,genes.num,perms.num,test="t.welch")
 {
 	statistic.matrix<-matrix(NA,genes.num,perms.num)
 	
@@ -440,7 +481,7 @@ compute.resampling.stat<- function(exp.arr,design,genes.num,perms.num,test="t")
 ###############################################################################################
 
 
-fdr.pt<- function(exp.arr,design,ref.vector="NULL",test="t")
+fdr.pt<- function(exp.arr,design,ref.vector="NULL",test="t.welch")
 {
 	info.list<-fdr.basic.comp(exp.arr,design,test,ref.vector,perms.num=1) 
 	pt.adjust<-info.list$pvalues*info.list$genes.num/info.list$r.vector	#BH Linear Step-Up adjusted p-values Vector - No Resampling
@@ -452,7 +493,7 @@ fdr.pt<- function(exp.arr,design,ref.vector="NULL",test="t")
 
 
 
-fdr.bh<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t")
+fdr.bh<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.var")
 {
 	info.list<-fdr.basic.comp(exp.arr=exp.arr,design=design,test=test,ref.vector=ref.vector,perms.num=perms.num)
 	
@@ -466,7 +507,7 @@ fdr.bh<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t")
 	return(list(ref.vector=info.list$ref.vector,bh.value=bh.value,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="resampling",fdr.adj="BH-LSU",resamp.pvalues=pa$y,test=test))
 }
 
-fdr.qu<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t",alpha=0.05)  #upper.est
+fdr.qu<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.var",alpha=0.05)  #upper.est
 {
 	info.list<-fdr.basic.comp(exp.arr=exp.arr,design=design,test=test,ref.vector=ref.vector,perms.num=perms.num)
 	
@@ -491,7 +532,7 @@ fdr.qu<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t",alpha=
 	return(list(ref.vector=info.list$ref.vector,qu.value=qu.value,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="resampling",fdr.adj="upper.est",resamp.pvalues=pa$y,test=test))	
 }						                     
 
-fdr.q<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t",alpha=0.05)
+fdr.q<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.var",alpha=0.05)
 {
 	info.list<-fdr.basic.comp(exp.arr=exp.arr,design=design,test=test,ref.vector=ref.vector,perms.num=perms.num)
 	
@@ -521,7 +562,7 @@ fdr.q<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t",alpha=0
 } 
 
 
-fdr.adaptive.c<- function(exp.arr,design,ref.vector="NULL",test="t")
+fdr.adaptive.c<- function(exp.arr,design,ref.vector="NULL",test="t.welch")
 {	
 	info.list<-fdr.basic.comp(exp.arr=exp.arr,design=design,test=test,ref.vector=ref.vector,perms.num=1)
 	
@@ -532,7 +573,7 @@ fdr.adaptive.c<- function(exp.arr,design,ref.vector="NULL",test="t")
 	return(list(ref.vector=info.list$ref.vector,adapk=adapk,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="theoretic",fdr.adj="adaptive",test=test))		
 }
 
-fdr.adaptive.c.resampling<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t")
+fdr.adaptive.c.resampling<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.var")
 {
 	info.list<-fdr.basic.comp(exp.arr=exp.arr,design=design,test=test,ref.vector=ref.vector,perms.num=perms.num)
 	m<-info.list$ref.vector.size
