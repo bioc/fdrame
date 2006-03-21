@@ -437,7 +437,7 @@ compute.statistic<-function(exp.arr,design,test)
 
 
 ###############################################################################################
-get.resampling.statistic.array<-function(exp.arr,design,perms.num,groups.sizes,test="t")
+get.resampling.statistic.array<-function(exp.arr,design,perms.num,groups.sizes,test="t.equal.var")
 {
 	row.doesnt.contain.na<-apply(is.na(exp.arr),1,sum)==0
 	genes.num<-sum(row.doesnt.contain.na)
@@ -447,9 +447,13 @@ get.resampling.statistic.array<-function(exp.arr,design,perms.num,groups.sizes,t
 		statistic.array<-.C("compute_resampling_t_stat",as.double(as.vector(exp.arr[row.doesnt.contain.na])),as.integer(groups.sizes[1]),as.integer(groups.sizes[2]),as.integer(genes.num), as.integer(perms.num),as.double(statistic.array),PACKAGE="fdrame")[[6]]	
 		statistic.matrix<-matrix(statistic.array,genes.num,perms.num)
 	}
-	if (test=="f")
+	else if (test=="f")
 	{
 		statistic.matrix<-compute.resampling.stat(exp.arr=exp.arr[(1:genes.num)[(row.doesnt.contain.na)],],design=design,genes.num=genes.num,perms.num=perms.num,test=test)
+	}
+	else
+	{
+		stop("test must be t.equal.var or f")
 	}
 		
 	return(statistic.matrix)
