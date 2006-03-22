@@ -11,28 +11,39 @@ OnRbpm2 <-function()
 }
 OnCbfa1	<-function()
 {
+	if (tclvalue(cbfa1Value)=="1") cbfa5Value <<- tclVar("1")
 	state<-ifelse(as.character(tclvalue(cbfa1Value))=="1","disabled","normal")
+	
 	tkconfigure(cbfa5, state=state)
 
 }
 
 OnCbfa2	<-function()
 {
+	if (tclvalue(cbfa2Value)=="1") cbfa5Value <<- tclVar("1")
 	state<-ifelse(as.character(tclvalue(cbfa2Value))=="1","disabled","normal")
+	
+
 	tkconfigure(cbfa5, state=state)
 
 }
 
 OnCbfa3	<-function()
 {
+	if (tclvalue(cbfa3Value)=="1") cbfa5Value <<- tclVar("1")
+
 	state<-ifelse(as.character(tclvalue(cbfa3Value))=="1","disabled","normal")
+	
 	tkconfigure(cbfa5, state=state)
 
 }
 
 OnCbfa4	<-function()
 {
+	if (tclvalue(cbfa4Value)=="1") cbfa5Value <<- tclVar("1")
+
 	state<-ifelse(as.character(tclvalue(cbfa4Value))=="1","disabled","normal")
+	
 	tkconfigure(cbfa5, state=state)
 
 }
@@ -385,7 +396,7 @@ fdr.gui <- function()
 	tkconfigure(cbfa2,variable=cbfa2Value)
 	tkconfigure(cbfa3,variable=cbfa3Value)
 	tkconfigure(cbfa4,variable=cbfa4Value)
-	tkconfigure(cbfa5,variable=cbfa5Value)
+	tkconfigure(cbfa5,variable=cbfa5Value,state="disabled")
 
 	tkgrid(tklabel(framePmethod,text="P.method:"))
 	tkgrid(tklabel(framePmethod,text="No resampling "),rbpm1)
