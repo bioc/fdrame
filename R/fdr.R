@@ -156,14 +156,9 @@ fdr.plot <-function(info.list,plot=c("pvlVSrank","adjVSrank"),test=test)
 	else if ((info.list$p.method=="resampling")&&(info.list$fdr.adj=="point.est"))
 		y.values<-info.list$q.value
 
-	
-
 	x.values<-info.list$ref.vector
-	
 
 	x.leg<-paste("observed |",test,"|")
-	
-	
 	
 	fdr.pa<-approx(spline(x.values,y.values),xout=abs(info.list$statistic.vector))
 	
