@@ -9,7 +9,34 @@ OnRbpm2 <-function()
 	tkconfigure(entry.Perms, state="normal")
 
 }
+OnCbfa1	<-function()
+{
+	state<-ifelse(as.character(tclvalue(cbfa1Value))=="1","disabled","normal")
+	tkconfigure(cbfa5, state=state)
 
+}
+
+OnCbfa2	<-function()
+{
+	state<-ifelse(as.character(tclvalue(cbfa2Value))=="1","disabled","normal")
+	tkconfigure(cbfa5, state=state)
+
+}
+
+OnCbfa3	<-function()
+{
+	state<-ifelse(as.character(tclvalue(cbfa3Value))=="1","disabled","normal")
+	tkconfigure(cbfa5, state=state)
+
+}
+
+OnCbfa4	<-function()
+{
+	state<-ifelse(as.character(tclvalue(cbfa4Value))=="1","disabled","normal")
+	tkconfigure(cbfa5, state=state)
+
+}
+	
 OnRbfa1 <-function()
 {
 	#tkconfigure(rbpm1, state="normal")
@@ -18,6 +45,7 @@ OnRbfa1 <-function()
 	
 	tkconfigure(cbfa1, state="normal")
 	tkconfigure(cbfa2, state="disabled")
+	
 }
 
 OnRbfa2 <-function()
@@ -27,7 +55,7 @@ OnRbfa2 <-function()
 #	tkconfigure(entry.Perms, state="normal")
 	tkconfigure(cbfa1, state="disabled")
 	tkconfigure(cbfa2, state="normal")
-
+	
 }
 
 OnRbfa3 <-function()
@@ -59,7 +87,7 @@ OnRbfa4 <-function()
 
 	tkconfigure(cbfa1, state="disabled")
 	tkconfigure(cbfa2, state="disabled")
-
+	
 }
 
 
@@ -202,6 +230,7 @@ OnCompute <- function()
 	cbfa2Val <- as.character(tclvalue(cbfa2Value))
 	cbfa3Val <- as.character(tclvalue(cbfa3Value))
 	cbfa4Val <- as.character(tclvalue(cbfa4Value))
+	cbfa5Val <- as.character(tclvalue(cbfa5Value))
 
 	plot<-c()
 	if (cbpl1Val=="1") plot<-c(plot,"pvlVSrank")
@@ -252,12 +281,13 @@ OnCompute <- function()
 	if (fdr.adj=="point.est")
 		p.method<-ifelse(cbfa4Val=="1","resampling","theoretic")
 
-
+	
+	equal.var<-ifelse(cbfa5Val=="1",TRUE,FALSE)
 
 	time1<-proc.time()[3]
 	#a<<-tryCatch(fdr.output<<-fdr.ma(exp.arr=exp.arr,design=designVal,p.method=p.method,fdr.adj=fdr.adj,plot=plot,perms.num=as.numeric(permsNumVal)),fdr.error())
 	ch2<-FALSE
-	a<<-try({fdr.output<-fdr.ma(exp.arr=exp.arr,design=designVal,p.method=p.method,fdr.adj=fdr.adj,plot=plot,perms.num=as.numeric(permsNumVal));ch2<-TRUE})
+	a<<-try({fdr.output<-fdr.ma(exp.arr=exp.arr,design=designVal,p.method=p.method,fdr.adj=fdr.adj,equal.var=equal.var,plot=plot,perms.num=as.numeric(permsNumVal));ch2<-TRUE})
 	if (ch2==FALSE) fdr.error()
 	time2<-proc.time()[3]
 	#print(paste("TIME:",(time2-time1)," s"))
@@ -320,11 +350,11 @@ fdr.gui <- function()
 	cbpl2 <<- tkcheckbutton(frameplot)
 	cbpl3 <<- tkcheckbutton(frameplot)
 	
-	cbfa1 <<- tkcheckbutton(frameAdj)
-	cbfa2 <<- tkcheckbutton(frameAdj)
-	cbfa3 <<- tkcheckbutton(frameAdj)
-	cbfa4 <<- tkcheckbutton(frameAdj)
-
+	cbfa1 <<- tkcheckbutton(frameAdj,command=OnCbfa1)
+	cbfa2 <<- tkcheckbutton(frameAdj,command=OnCbfa2)
+	cbfa3 <<- tkcheckbutton(frameAdj,command=OnCbfa3)
+	cbfa4 <<- tkcheckbutton(frameAdj,command=OnCbfa4)
+	cbfa5 <<- tkcheckbutton(frameAdj)
 
 	rbpmValue <<- tclVar("resampling")
 	rbnoValue <<- tclVar("normalized")
@@ -337,6 +367,7 @@ fdr.gui <- function()
 	cbfa2Value <<- tclVar("0")
 	cbfa3Value <<- tclVar("1")
 	cbfa4Value <<- tclVar("1")
+	cbfa5Value <<- tclVar("1")
 
 	tkconfigure(rbpm1,variable=rbpmValue,value="theoretic")
 	tkconfigure(rbpm2,variable=rbpmValue,value="resampling")
@@ -354,6 +385,7 @@ fdr.gui <- function()
 	tkconfigure(cbfa2,variable=cbfa2Value)
 	tkconfigure(cbfa3,variable=cbfa3Value)
 	tkconfigure(cbfa4,variable=cbfa4Value)
+	tkconfigure(cbfa5,variable=cbfa5Value)
 
 	tkgrid(tklabel(framePmethod,text="P.method:"))
 	tkgrid(tklabel(framePmethod,text="No resampling "),rbpm1)
@@ -366,10 +398,12 @@ fdr.gui <- function()
 	tkgrid(tklabel(frameAdj,text="Adaptive-two stages"),rbfa2,cbfa2)
 	tkgrid(tklabel(frameAdj,text="Upper estimation "),rbfa3,cbfa3)
 	tkgrid(tklabel(frameAdj,text="Point estimation "),rbfa4,cbfa4)
-	
+	tkgrid(tklabel(frameAdj,text="Equal variance assumption "),cbfa5)
+
 	tkconfigure(cbfa2, state="disabled")
 	tkconfigure(cbfa3, state="disabled")
 	tkconfigure(cbfa4, state="disabled")
+	tkconfigure(cbfa5)
 	
 	tkgrid(tklabel(frameAdj,text="Number of permutations:       "),entry.Perms,columnspan=2)
 	tkgrid(tklabel(frameplot,text="Plot:"))

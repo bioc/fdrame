@@ -40,6 +40,7 @@ fdr.ma<- function(exp.arr=NA,design=NA,p.method="resampling",fdr.adj="BH-LSU",eq
 	}
 	else if (p.method=="theoretic")				# calling core functions that doesn't uses resampling
 	{
+		perms.num<-1
 		if (fdr.adj=="BH-LSU")
 			fdr.output<-fdr.pt(exp.arr,design,ref.vector="HYBRID",test=test)
 		else if (fdr.adj=="adaptive")
@@ -51,6 +52,7 @@ fdr.ma<- function(exp.arr=NA,design=NA,p.method="resampling",fdr.adj="BH-LSU",eq
 	else 	stop(paste("ERROR: There is no such method!: p.method=",p.method))
 
 	xy<-fdr.plot(info.list=fdr.output,plot=plot,test=test)	# calling plot to draw graphs and compute approximated values
+	
 	return(list(adj=xy$y,dif=fdr.output$dif))
 }
 
@@ -63,7 +65,8 @@ fdr.ma<- function(exp.arr=NA,design=NA,p.method="resampling",fdr.adj="BH-LSU",eq
 fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint=2.5,perms.num=1) # Inits and builds rejections vector
 {
 	#Each one of the core functions call this function. Here the statistic is computed, refference vector is created, pvalues and resampled pvalues are computed.
-
+	if (test=="t.welch")
+		ref.vector<-"NULL"
 	n.total<-length(design)
 	n.groups<-length(unique(design))
 	if (length(design)>dim(exp.arr)[2])
@@ -73,7 +76,7 @@ fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint
 	cs<-compute.statistic(exp.arr,design,test)
 	statistic.vector<-cs$statistic.vector	#compute stat each gene (No Resampling)
 	
-	if ((test=="t.welch")||(test=="t.equal.var"))	jpoint<-2
+	if ((test=="t.welch")|(test=="t.equal.var"))	jpoint<-2
 	else if (test=="f") jpoint<- qf(0.95,n.groups-1,dim(exp.arr)[2]-n.groups)
 
 	if (ref.vector[1]=="NULL")		 				#checks whether it has ref.vector
@@ -103,13 +106,19 @@ fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint
 	{
 		r.vector[i]<-sum(abs(statistic.vector)>ref.vector[i],na.rm=TRUE)	#r.vector[m] counts the number rejected values (bigger than ref.vector[m])
 	}
-	if ((test=="t.welch")||(test=="t.equal.var"))
+	
+	
+
+
+
+	if ((test=="t.welch")|(test=="t.equal.var"))
 		pvalues<-2*(1-pt(as.numeric(ref.vector),cs$df))	#compute pvalues from t-statistic
 	#	
 	#	pvalues<-2*(1-pt(as.numeric(ref.vector),(n.total-2)))	#compute pvalues from t-statistic
 	
 	else if (test=="f")
 		pvalues<-(1-pf(as.numeric((ref.vector)),n.groups-1,(n.total-n.groups)))	#compute pvalues from f-statistic
+	
 	ud<-unique(design)
 	groups.sizes<-vector("numeric",length(ud))
 	for (i in 1:length(ud))
@@ -124,6 +133,7 @@ fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint
 		return(list(genes.num=genes.num,design=design,ref.vector=as.vector(ref.vector),pvalues=pvalues,r.vector=r.vector,statistic.vector=statistic.vector,ref.vector.size=ref.vector.size,ref.vector.real.values=ref.vector.real.values,dif=cs$dif,groups.sizes=groups.sizes,resamp.pvalues=resamp.pvalues,res.stat.matrix=res.stat.matrix))
 	}
 	else	return(list(genes.num=genes.num,design=design,ref.vector=as.vector(ref.vector),pvalues=pvalues,r.vector=r.vector,statistic.vector=statistic.vector,ref.vector.size=ref.vector.size,ref.vector.real.values=ref.vector.real.values,dif=cs$dif,groups.sizes=groups.sizes,test=test))
+	
 }
 
 
@@ -146,18 +156,24 @@ fdr.plot <-function(info.list,plot=c("pvlVSrank","adjVSrank"),test=test)
 	else if ((info.list$p.method=="resampling")&&(info.list$fdr.adj=="point.est"))
 		y.values<-info.list$q.value
 
+	
 
 	x.values<-info.list$ref.vector
+	
+
 	x.leg<-paste("observed |",test,"|")
 	
+	
+	
 	fdr.pa<-approx(spline(x.values,y.values),xout=abs(info.list$statistic.vector))
+	
 	px.values<-fdr.pa$x
 	py.values<-fdr.pa$y
 	py.values<-ifelse(py.values>1,1,py.values)
 
 	outx<-px.values
 	outy<-py.values
-
+	
 	if (length(plot)>0)		#adjusted
 	{
 		
@@ -387,13 +403,13 @@ compute.t.statistic<-function(exp.arr,design,equal.var=TRUE)
 	
 	if (!equal.var)
 	{
-		print(var.b)
-		print(var.a)
+		#print(var.b)
+		#print(var.a)
 		#print(n.a)
 		c<-(var.a/n.a)/(var.a/n.a+var.b/n.b)
 		
 		df<-1/(c^2/(n.a-1)+(1-c)^2/(n.b-1))
-		print(c)
+		#print(c)
 		#print((1-c^2)/(n.b-1))
 		
 	}
