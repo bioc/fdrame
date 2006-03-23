@@ -65,6 +65,7 @@ fdr.ma<- function(exp.arr=NA,design=NA,p.method="resampling",fdr.adj="BH-LSU",eq
 fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint=2.5,perms.num=1) # Inits and builds rejections vector
 {
 	#Each one of the core functions call this function. Here the statistic is computed, refference vector is created, pvalues and resampled pvalues are computed.
+	unsorted.ref.vector<-NULL
 	if (test=="t.welch")
 		ref.vector<-"NULL"
 	n.total<-length(design)
@@ -84,21 +85,34 @@ fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint
 		sorted.statistic.vector<-sort(abs(statistic.vector), decreasing = TRUE)
 		ref.vector<-sorted.statistic.vector
 		ref.vector.real.values<-rep("TRUE",length(ref.vector))
+		ord<-match(1:length(statistic.vector),order(abs(statistic.vector),decreasing=TRUE))
 	}
 	else if (ref.vector[1]=="HYBRID")
 	{
 		sorted.statistic.vector<-sort(abs(statistic.vector), decreasing = TRUE)
+		ord<-match(1:length(statistic.vector),order(statistic.vector,decreasing=TRUE))
 		r1<-sorted.statistic.vector[sorted.statistic.vector>jpoint]
 		r2<-seq(jpoint,0,length=200)
 		ref.vector<-as.numeric(c(r1,r2))
 		ref.vector.real.values<-c(rep("TRUE",length(r1)),rep("FALSE",length(r2)))
+		#ord[!ref.vector.real.values]<-NA
+		
 	}
 	else if (is.numeric(ref.vector))
 	{
+		
+		unsorted.ref.vector<-ref.vector
+		ord<-match(1:length(ref.vector),order(ref.vector,decreasing=TRUE))
+		ref.vector<-sort(ref.vector, decreasing = TRUE)
+
 		ref.vector.real.values<-rep("FALSE",length(ref.vector))
-	}		
+		
+		print(ord)
+		
+	}
 		
 	
+ 
 	ref.vector.size<-length(ref.vector)
 	r.vector<-vector("numeric",ref.vector.size)
 
@@ -107,10 +121,6 @@ fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint
 		r.vector[i]<-sum(abs(statistic.vector)>ref.vector[i],na.rm=TRUE)	#r.vector[m] counts the number rejected values (bigger than ref.vector[m])
 	}
 	
-	
-
-
-
 	if ((test=="t.welch")|(test=="t.equal.var"))
 		pvalues<-2*(1-pt(as.numeric(ref.vector),cs$df))	#compute pvalues from t-statistic
 	#	
@@ -128,11 +138,12 @@ fdr.basic.comp<- function(exp.arr,design,test="t.welch",ref.vector="NULL",jpoint
 	{
 		resamp.pvalues<-vector("numeric",ref.vector.size)
 		res.stat.matrix<-get.resampling.statistic.array(exp.arr,design,perms.num,groups.sizes,test)
+		res.stat.matrix<-res.stat.matrix[order(abs(statistic.vector),decreasing=TRUE),]
 		for (i in 1:ref.vector.size)		
 			resamp.pvalues[i]<-sum(abs(res.stat.matrix)> ref.vector[i])/(perms.num*genes.num)
-		return(list(genes.num=genes.num,design=design,ref.vector=as.vector(ref.vector),pvalues=pvalues,r.vector=r.vector,statistic.vector=statistic.vector,ref.vector.size=ref.vector.size,ref.vector.real.values=ref.vector.real.values,dif=cs$dif,groups.sizes=groups.sizes,resamp.pvalues=resamp.pvalues,res.stat.matrix=res.stat.matrix))
+		return(list(genes.num=genes.num,design=design,ref.vector=as.vector(ref.vector),unsorted.ref.vector=unsorted.ref.vector,pvalues=pvalues,r.vector=r.vector,statistic.vector=statistic.vector,ref.vector.size=ref.vector.size,ref.vector.real.values=ref.vector.real.values,dif=cs$dif,groups.sizes=groups.sizes,order=ord,resamp.pvalues=resamp.pvalues,res.stat.matrix=res.stat.matrix))
 	}
-	else	return(list(genes.num=genes.num,design=design,ref.vector=as.vector(ref.vector),pvalues=pvalues,r.vector=r.vector,statistic.vector=statistic.vector,ref.vector.size=ref.vector.size,ref.vector.real.values=ref.vector.real.values,dif=cs$dif,groups.sizes=groups.sizes,test=test))
+	else	return(list(genes.num=genes.num,design=design,ref.vector=as.vector(ref.vector),unsorted.ref.vector=unsorted.ref.vector,pvalues=pvalues,r.vector=r.vector,statistic.vector=statistic.vector,ref.vector.size=ref.vector.size,ref.vector.real.values=ref.vector.real.values,dif=cs$dif,groups.sizes=groups.sizes,order=ord,test=test))
 	
 }
 
@@ -503,7 +514,8 @@ fdr.pt<- function(exp.arr,design,ref.vector="NULL",test="t.welch")
 	pt.adjust<-ifelse(is.nan(pt.adjust),0,pt.adjust)
 	pt.adjust<-rev(cummin(rev(pt.adjust)))	#Monotone Adjustment
 
-	return(list(ref.vector=info.list$ref.vector,pt.adjust=pt.adjust,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="theoretic",fdr.adj="BH-LSU",test=test))
+	return(list(ref.vector=info.list$ref.vector[ord],pt.adjust=pt.adjust[ord],pvalues=info.list$pvalues[ord],statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="theoretic",fdr.adj="BH-LSU",test=test))
+
 }
 
 
@@ -518,8 +530,10 @@ fdr.bh<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.v
 
 	bh.value<-ifelse(info.list$r.vector>0,(info.list$resamp.pvalues*info.list$genes.num/(info.list$r.vector)),0) 
 	bh.value<-rev(cummin(rev(bh.value)))	#Monotone Adjustment
-	
-	return(list(ref.vector=info.list$ref.vector,bh.value=bh.value,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="resampling",fdr.adj="BH-LSU",resamp.pvalues=pa$y,test=test))
+
+	ord<-info.list$order
+	return(list(ref.vector=info.list$ref.vector[ord],bh.value=bh.value[ord],pvalues=info.list$pvalues[ord],statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values[ord],dif=info.list$dif,p.method="resampling",fdr.adj="BH-LSU",resamp.pvalues=pa$y,test=test))
+
 }
 
 fdr.qu<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.var",alpha=0.05)  #upper.est
@@ -538,13 +552,15 @@ fdr.qu<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.v
 		est.95qu.exc[i]<- quantile(v,prob=(1-alpha),,names = FALSE)	#compute qu for these values
 		su.hat[i]<-info.list$r.vector[i]-est.95qu.exc[i]
 		su.hat[i]<- ifelse(su.hat[i]<0,0,su.hat[i])			#insure values are not negative
-		v<-ifelse((v+su.hat[i])!=0,v/(v+su.hat[i]),0)     # checks division by zero
-		qu.value[i]<-mean(v)			#Resampling Upper Limit Estimate adjusted p-values Vector
+		resamp.q<-ifelse((v+su.hat[i])!=0,v/(v+su.hat[i]),0)     # checks division by zero
+		qu.value[i]<-mean(resamp.q)			#Resampling Upper Limit Estimate adjusted p-values Vector
 	}
 	qu.value<-cummax(qu.value)
 	pa<-approx(spline(info.list$ref.vector,info.list$resamp.pvalues),xout=abs(info.list$statistic.vector))	
-	
-	return(list(ref.vector=info.list$ref.vector,qu.value=qu.value,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="resampling",fdr.adj="upper.est",resamp.pvalues=pa$y,test=test))	
+	ord<-info.list$order
+	return(list(ref.vector=info.list$ref.vector[ord],qu.value=qu.value[ord],pvalues=info.list$pvalues[ord],statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values[ord],dif=info.list$dif,p.method="resampling",fdr.adj="upper.est",resamp.pvalues=pa$y,test=test))	
+
+
 }						                     
 
 fdr.q<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.var",alpha=0.05)
@@ -564,16 +580,17 @@ fdr.q<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.va
 		est.95qu.exc[i]<- quantile(v,prob=(1-alpha),,names = FALSE)
 		s.hat[i]<- info.list$r.vector[i]-mean(v)
 		s.hat[i]<- ifelse(s.hat[i]<est.95qu.exc[i],0,s.hat[i])
-		v<-ifelse((v+s.hat[i])!=0,v/(v+s.hat[i]),0)     # checks division by zero
+		resamp.q<-ifelse((v+s.hat[i])!=0,v/(v+s.hat[i]),0)     # checks division by zero
 	
-		q.value[i]<-mean(v)		#Resampling Point Estimate adjusted p-values Vector
+		q.value[i]<-mean(resamp.q)		#Resampling Point Estimate adjusted p-values Vector
 		
 	}
 	
 	q.value<-rev(cummin(rev(q.value)))	#Monotone Adjustment
 	pa<-approx(spline(info.list$ref.vector,info.list$resamp.pvalues),xout=abs(info.list$statistic.vector))	
-		
-	return(list(ref.vector=info.list$ref.vector,q.value=q.value,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="resampling",fdr.adj="point.est",resamp.pvalues=pa$y,test=test))	
+	#browser() 
+	ord<-info.list$order
+	return(list(ref.vector=info.list$ref.vector[ord],q.value=q.value[ord],pvalues=info.list$pvalues[ord],statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values[ord],dif=info.list$dif,p.method="resampling",fdr.adj="point.est",resamp.pvalues=pa$y,order=info.list$order,test=test))	
 } 
 
 
@@ -586,6 +603,7 @@ fdr.adaptive.c<- function(exp.arr,design,ref.vector="NULL",test="t.welch")
 	adapk<-.C("adaptive",as.double(info.list$pvalues),as.integer(m),as.double(adapk),PACKAGE="fdrame")[[3]]		
 	
 	return(list(ref.vector=info.list$ref.vector,adapk=adapk,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="theoretic",fdr.adj="adaptive",test=test))		
+
 }
 
 fdr.adaptive.c.resampling<- function(exp.arr,design,perms.num=100,ref.vector="NULL",test="t.equal.var")
@@ -597,6 +615,7 @@ fdr.adaptive.c.resampling<- function(exp.arr,design,perms.num=100,ref.vector="NU
 			
 	pa<-approx(spline(info.list$ref.vector,info.list$resamp.pvalues),xout=abs(info.list$statistic.vector))	
 	adapk<-.C("adaptive",as.double(info.list$resamp.pvalues),as.integer(m),as.double(adapk),PACKAGE="fdrame")[[3]]		
-	
+	ord<-info.list$order
 	return(list(ref.vector=info.list$ref.vector,adapk=adapk,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="theoretic",fdr.adj="adaptive",resamp.pvalues=pa$y,test=test))		
+
 }
