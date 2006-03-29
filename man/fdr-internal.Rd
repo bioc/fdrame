@@ -29,6 +29,10 @@
 \alias{OnCancel}
 \alias{OnOK}
 \alias{OnHelp}
+\alias{OnCbfa1}
+\alias{OnCbfa2}
+\alias{OnCbfa3}
+\alias{OnCbfa4}
 \alias{read.matrix}   
 
 
