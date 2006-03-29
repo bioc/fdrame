@@ -513,7 +513,7 @@ fdr.pt<- function(exp.arr,design,ref.vector="NULL",test="t.welch")
 	pt.adjust<-info.list$pvalues*info.list$genes.num/info.list$r.vector	#BH Linear Step-Up adjusted p-values Vector - No Resampling
 	pt.adjust<-ifelse(is.nan(pt.adjust),0,pt.adjust)
 	pt.adjust<-rev(cummin(rev(pt.adjust)))	#Monotone Adjustment
-
+	ord<-info.list$order
 	return(list(ref.vector=info.list$ref.vector[ord],pt.adjust=pt.adjust[ord],pvalues=info.list$pvalues[ord],statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="theoretic",fdr.adj="BH-LSU",test=test))
 
 }
@@ -615,7 +615,7 @@ fdr.adaptive.c.resampling<- function(exp.arr,design,perms.num=100,ref.vector="NU
 			
 	pa<-approx(spline(info.list$ref.vector,info.list$resamp.pvalues),xout=abs(info.list$statistic.vector))	
 	adapk<-.C("adaptive",as.double(info.list$resamp.pvalues),as.integer(m),as.double(adapk),PACKAGE="fdrame")[[3]]		
-	ord<-info.list$order
+	
 	return(list(ref.vector=info.list$ref.vector,adapk=adapk,pvalues=info.list$pvalues,statistic.vector=info.list$statistic.vector,ref.vector.real.values=info.list$ref.vector.real.values,dif=info.list$dif,p.method="theoretic",fdr.adj="adaptive",resamp.pvalues=pa$y,test=test))		
 
 }
