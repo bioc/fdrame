@@ -1,6 +1,6 @@
 Package: fdrame
 Title: FDR adjustments of Microarray Experiments (FDR-AME)
-Version: 1.3.2
+Version: 1.4.0
 Author: Yoav Benjamini, Effi Kenigsberg, Anat Reiner, Daniel Yekutieli
 Description: This package contains two main functions. The first is fdr.ma which takes normalized expression data array, experimental design and computes adjusted p-values It returns the fdr adjusted p-values and plots, according to the methods described in (Reiner, Yekutieli and Benjamini 2002). The second, is fdr.gui() which creates a simple graphic user interface to access fdr.ma
 Maintainer: Effi Kenigsberg <effiken.fdrame@gmail.com>
