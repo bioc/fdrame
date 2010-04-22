@@ -1,0 +1,21 @@
+useDynLib(fdrame)
+
+importFrom(tcltk, tclvalue, tclVar, tkbind, tkbutton, tkcheckbutton,
+           tkconfigure, tkcurselection, tkdestroy, tkentry, tkfocus,
+           tkframe, tkgetOpenFile, tkgetSaveFile, tkgrid,
+           tkgrid.configure, tkinsert, tklabel, tklistbox,
+           tkmessageBox, tkradiobutton, tkscrollbar, tkset, tktext,
+           tktoplevel, tkwm.resizable, tkwm.title, tkyview)
+importFrom(graphics, abline, par)
+importFrom(grDevices, x11)
+importFrom(stats, approx, lm, lowess, pf, pt, qf, quantile, spline)
+importFrom(utils, read.table)
+
+export(compute.f.statistic, compute.resampling.stat, compute.statistic,
+       compute.t.statistic, fdr.adaptive.c, fdr.adaptive.c.resampling,
+       fdr.basic.comp, fdr.bh, fdr.error, fdr.gui, fdr.ma, fdr.plot,
+       fdr.pt, fdr.q, fdr.qu, gene.expression.normalization,
+       get.resampling.statistic.array, OnBrowseDesign, OnBrowseInput,
+       OnBrowseOutput, OnCancel, OnCbfa1, OnCbfa2, OnCbfa3, OnCbfa4,
+       OnCompute, OnHelp, OnOK, OnRbfa1, OnRbfa2, OnRbfa3, OnRbfa4,
+       OnRbpm1, OnRbpm2, read.matrix)

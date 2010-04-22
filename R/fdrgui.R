@@ -317,7 +317,6 @@ fdr.error<- function()
 
 fdr.gui <- function()
 {
-	require(tcltk)
 	fdrtt<<-tktoplevel()
 	designFlag<<-"FALSE"
 
