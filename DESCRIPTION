@@ -1,6 +1,6 @@
 Package: fdrame
 Title: FDR adjustments of Microarray Experiments (FDR-AME)
-Version: 1.51.0
+Version: 1.52.0
 Author: Yoav Benjamini, Effi Kenigsberg, Anat Reiner, Daniel Yekutieli
 Description: This package contains two main functions. The first is
         fdr.ma which takes normalized expression data array,
